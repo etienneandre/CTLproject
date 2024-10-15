@@ -1,0 +1,154 @@
+/**
+ * Quick CTL parser
+ * Author       : Étienne André
+ * Created      : 2024/10/08
+ * Last modified: 2024/10/15
+ */
+
+PARSER_BEGIN(CTLParser)
+
+import java.util.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
+public class CTLParser {
+
+	public static Formula parseFormula(String file_name) throws ParseException, FileNotFoundException{
+		FileInputStream fis = new FileInputStream(file_name);
+		CTLParser parser = new CTLParser(fis);
+		Formula formula = parser.Formula();
+		return formula;
+	}
+}
+
+PARSER_END(CTLParser)
+
+SKIP : { " " | "\t" | "\n" | "\r" }
+
+TOKEN : {
+    < TRUE: "TRUE" > |
+    < FALSE: "FALSE" > |
+    < AND: "AND" > |
+    < OR: "OR" > |
+    < NOT: "NOT" > |
+    < IMPLIES: "=>" > |
+    < A : "A" > |
+    < AF: "AF" > |
+    < AG: "AG" > |
+    < AX: "AX" > |
+    < E : "E" > |
+    < EF: "EF" > |
+    < EG: "EG" > |
+    < EX: "EX" > |
+    < U : "U" > |
+    < LPAREN: "(" > |
+    < RPAREN: ")" > |
+    < LSQUARE: "[" > |
+    < RSQUARE: "]" > |
+    < ATOMIC: (["a"-"z","A"-"Z"])(["a"-"z","A"-"Z","0"-"9"])* > // Atomic propositions like p, q, etc.
+}
+
+Formula Formula() :
+{
+    Formula f;
+}
+{
+	{}
+    (f = FormulaOr() { return f; }) <EOF>
+}
+
+Formula FormulaOr() :
+{
+    Formula left, right;
+}
+{
+    left = FormulaImplies()
+    ( <OR> right = FormulaImplies() { left = new OrFormula(left, right); } )*
+    { return left; }
+}
+
+Formula FormulaImplies() :
+{
+    Formula left, right;
+}
+{
+    left = FormulaAnd()
+    ( <IMPLIES> right = FormulaAnd() { left = new ImpliesFormula(left, right); } )*
+    { return left; }
+}
+
+Formula FormulaAnd() :
+{
+    Formula left, right;
+}
+{
+    left = FormulaUnary()
+    ( <AND> right = FormulaUnary() { left = new AndFormula(left, right); } )*
+    { return left; }
+}
+
+Formula FormulaUnary() :
+{
+    Formula f;
+}
+{
+    (
+      <NOT> f = FormulaUnary() { return new NotFormula(f); }
+    | f = TemporalModality() { return f; }
+    | f = FormulaPrimary() { return f; }
+    )
+}
+
+Formula FormulaPrimary() :
+{
+    Formula f;
+}
+{
+    (
+      <LPAREN> f = Formula() <RPAREN> { return f; }
+    | f = AtomicProposition() { return f; }
+    | f = True() { return f; }
+    | f = False() { return f; }
+    )
+}
+
+Formula AtomicProposition() :
+{
+    Token t;
+}
+{
+    t = <ATOMIC> { return new AtomicProposition(t.image); }
+}
+
+Formula True() :
+{
+    {}
+}
+{
+    <TRUE> { return new TrueFormula(); }
+}
+
+Formula False() :
+{
+    {}
+}
+{
+    <FALSE> { return new FalseFormula(); }
+}
+
+Formula TemporalModality() :
+{
+    Formula f, phi, psi;
+}
+{
+    (
+      <EF> f = FormulaUnary() { return new EFFormula(f); }
+    | <EG> f = FormulaUnary() { return new EGFormula(f); }
+    | <E> phi = FormulaUnary() <U> psi = FormulaUnary() { return new EUFormula(phi, psi); }
+    | <EX> f = FormulaUnary() { return new EXFormula(f); }
+    | <AF> f = FormulaUnary() { return new AFFormula(f); }
+    | <AG> f = FormulaUnary() { return new AGFormula(f); }
+    | <A> phi = FormulaUnary() <U> psi = FormulaUnary() { return new AUFormula(phi, psi); }
+    | <AX> f = FormulaUnary() { return new AXFormula(f); }
+    )
+}
