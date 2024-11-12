@@ -2,8 +2,13 @@
  * Quick CTL parser
  * Author       : Étienne André
  * Created      : 2024/10/08
- * Last modified: 2024/10/15
+ * Last modified: 2024/11/12
  */
+
+
+// options {
+//     DEBUG_PARSER = true;
+// }
 
 PARSER_BEGIN(CTLParser)
 
@@ -16,7 +21,7 @@ public class CTLParser {
 	public static Formula parseFormula(String file_name) throws ParseException, FileNotFoundException{
 		FileInputStream fis = new FileInputStream(file_name);
 		CTLParser parser = new CTLParser(fis);
-		Formula formula = parser.Formula();
+		Formula formula = parser.Start();
 		return formula;
 	}
 }
@@ -48,13 +53,13 @@ TOKEN : {
     < ATOMIC: (["a"-"z","A"-"Z"])(["a"-"z","A"-"Z","0"-"9"])* > // Atomic propositions like p, q, etc.
 }
 
-Formula Formula() :
+Formula Start() :
 {
     Formula f;
 }
 {
 	{}
-    (f = FormulaOr() { return f; }) <EOF>
+    f = FormulaOr() <EOF> { return f; }
 }
 
 Formula FormulaOr() :
@@ -92,11 +97,9 @@ Formula FormulaUnary() :
     Formula f;
 }
 {
-    (
       <NOT> f = FormulaUnary() { return new NotFormula(f); }
     | f = TemporalModality() { return f; }
     | f = FormulaPrimary() { return f; }
-    )
 }
 
 Formula FormulaPrimary() :
@@ -105,7 +108,7 @@ Formula FormulaPrimary() :
 }
 {
     (
-      <LPAREN> f = Formula() <RPAREN> { return f; }
+      <LPAREN> f = FormulaOr() <RPAREN> { return f; }
     | f = AtomicProposition() { return f; }
     | f = True() { return f; }
     | f = False() { return f; }
@@ -141,7 +144,6 @@ Formula TemporalModality() :
     Formula f, phi, psi;
 }
 {
-    (
       <EF> f = FormulaUnary() { return new EFFormula(f); }
     | <EG> f = FormulaUnary() { return new EGFormula(f); }
     | <E> phi = FormulaUnary() <U> psi = FormulaUnary() { return new EUFormula(phi, psi); }
@@ -150,5 +152,4 @@ Formula TemporalModality() :
     | <AG> f = FormulaUnary() { return new AGFormula(f); }
     | <A> phi = FormulaUnary() <U> psi = FormulaUnary() { return new AUFormula(phi, psi); }
     | <AX> f = FormulaUnary() { return new AXFormula(f); }
-    )
 }
