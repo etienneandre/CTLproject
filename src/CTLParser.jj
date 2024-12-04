@@ -2,7 +2,7 @@
  * Quick CTL parser
  * Author       : Étienne André
  * Created      : 2024/10/08
- * Last modified: 2024/11/12
+ * Last modified: 2024/12/04
  */
 
 
@@ -46,6 +46,7 @@ TOKEN : {
     < EG: "EG" > |
     < EX: "EX" > |
     < U : "U" > |
+    < W : "W" > |
     < LPAREN: "(" > |
     < RPAREN: ")" > |
     < LSQUARE: "[" > |
@@ -147,9 +148,11 @@ Formula TemporalModality() :
       <EF> f = FormulaUnary() { return new EFFormula(f); }
     | <EG> f = FormulaUnary() { return new EGFormula(f); }
     | <E> phi = FormulaUnary() <U> psi = FormulaUnary() { return new EUFormula(phi, psi); }
+//     | <E> phi = FormulaUnary() <W> psi = FormulaUnary() { return new EWFormula(phi, psi); }
     | <EX> f = FormulaUnary() { return new EXFormula(f); }
     | <AF> f = FormulaUnary() { return new AFFormula(f); }
     | <AG> f = FormulaUnary() { return new AGFormula(f); }
     | <A> phi = FormulaUnary() <U> psi = FormulaUnary() { return new AUFormula(phi, psi); }
+//     | <A> phi = FormulaUnary() <W> psi = FormulaUnary() { return new AWFormula(phi, psi); }
     | <AX> f = FormulaUnary() { return new AXFormula(f); }
 }

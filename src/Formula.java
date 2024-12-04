@@ -2,7 +2,7 @@
  * Quick CTL parser
  * Author       : Étienne André
  * Created      : 2024/10/08
- * Last modified: 2024/10/15
+ * Last modified: 2024/12/04
  */
 
 // Abstract class representing any CTL formula
@@ -153,6 +153,20 @@ class EUFormula extends Formula {
     }
 }
 
+class EWFormula extends Formula {
+    private Formula phi, psi;
+
+    public EWFormula(Formula phi, Formula psi) {
+        this.phi = phi;
+        this.psi = psi;
+    }
+
+    @Override
+    public String toString() {
+        return "E (" + phi + ") W (" + psi + ")";
+    }
+}
+
 class EXFormula extends Formula {
     private Formula formula;
 
@@ -204,6 +218,20 @@ class AUFormula extends Formula {
     @Override
     public String toString() {
         return "A (" + phi + ") U (" + psi + ")";
+    }
+}
+
+class AWFormula extends Formula {
+    private Formula phi, psi;
+
+    public AWFormula(Formula phi, Formula psi) {
+        this.phi = phi;
+        this.psi = psi;
+    }
+
+    @Override
+    public String toString() {
+        return "A (" + phi + ") W (" + psi + ")";
     }
 }
 
